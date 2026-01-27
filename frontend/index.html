@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gerador de Avaliações - MVP</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      padding: 40px;
+    }
+    input, select, button {
+      padding: 10px;
+      margin: 5px 0;
+      width: 300px;
+      display: block;
+    }
+    button {
+      cursor: pointer;
+      background: #2563eb;
+      color: white;
+      border: none;
+    }
+    .box {
+      background: #020617;
+      padding: 15px;
+      margin-top: 20px;
+      border-radius: 8px;
+    }
+    a {
+      color: #93c5fd;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>🧠 Gerador de Avaliações</h1>
+
+  <input id="topic" placeholder="Tema (ex: POO, TypeScript, Geografia)" />
+
+  <select id="level">
+    <option value="iniciante">Iniciante</option>
+    <option value="intermediario">Intermediário</option>
+    <option value="avancado">Avançado</option>
+  </select>
+
+  <input id="amount" type="number" min="1" max="20" value="5" />
+
+  <button onclick="generate()">Gerar avaliação</button>
+
+  <div id="result" class="box">Resultado aparecerá aqui...</div>
+
+  <script>
+    async function generate() {
+      try {
+        const topic = document.getElementById('topic').value.trim()
+        const level = document.getElementById('level').value
+        const amount = Number(document.getElementById('amount').value)
+
+        if (!topic) return alert('Digite o tema!')
+        if (!amount) return alert('Informe a quantidade de questões!')
+
+        const response = await fetch('/questions/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ topic, level, amount })
+        })
+
+        const data = await response.json()
+
+        const assessment = data.assessment ?? data
+        const pdfs = data.pdfs
+
+        renderAssessment(assessment, pdfs)
+
+      } catch (error) {
+        console.error(error)
+        alert('Erro ao gerar avaliação (veja o console)')
+      }
+    }
+
+    function renderAssessment(assessment, pdfs) {
+      const result = document.getElementById('result')
+      result.innerHTML = ''
+
+      const title = document.createElement('h2')
+      title.textContent = assessment.title ?? 'Avaliação'
+      result.appendChild(title)
+
+      const meta = document.createElement('p')
+      meta.textContent = `Nível: ${assessment.level} | Tempo total: ${assessment.totalTime} min`
+      result.appendChild(meta)
+
+      const questions = assessment.questions ?? []
+
+      questions.forEach((q, index) => {
+        const p = document.createElement('p')
+        p.textContent = `${index + 1}. ${q.statement}`
+        result.appendChild(p)
+      })
+
+      // ==== LINKS DOS PDFs ====
+      if (pdfs?.student || pdfs?.teacher) {
+        result.appendChild(document.createElement('hr'))
+
+        if (pdfs.student?.fileName) {
+          const aluno = document.createElement('a')
+          aluno.href = `/files/${pdfs.student.fileName}`
+          aluno.target = '_blank'
+          aluno.textContent = '📄 Baixar PDF do Aluno'
+          result.appendChild(aluno)
+          result.appendChild(document.createElement('br'))
+        }
+
+        if (pdfs.teacher?.fileName) {
+          const professor = document.createElement('a')
+          professor.href = `/files/${pdfs.teacher.fileName}`
+          professor.target = '_blank'
+          professor.textContent = '🧑‍🏫 Baixar PDF do Professor'
+          result.appendChild(professor)
+        }
+      }
+    }
+  </script>
+</body>
+</html>
