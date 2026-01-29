@@ -2,6 +2,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { generateAssessment } from '../services/questionGenerator.js'
 import { generateAssessmentPDF } from '../services/pdfGenerator.js'
+import { authMiddleware } from '../services/authService.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -10,12 +11,18 @@ const __dirname = path.dirname(__filename)
 const tmpDir = path.join(__dirname, '../../tmp')
 
 export default async function questionsRoutes(fastify) {
+  // ✅ Aplica middleware de autenticação em todas as rotas deste módulo
+  fastify.addHook('onRequest', authMiddleware)
+
   fastify.post('/generate', async (request, reply) => {
     try {
       const { topic, level, amount } = request.body
 
       if (!topic) return reply.status(400).send({ error: 'Topic is required' })
       if (!amount) return reply.status(400).send({ error: 'Amount is required' })
+
+      // ✅ Agora temos acesso aos dados do usuário via request.user
+      console.log(`Usuário ${request.user.email} gerando avaliação sobre: ${topic}`)
 
       const assessment = await generateAssessment({ topic, level, amount })
 

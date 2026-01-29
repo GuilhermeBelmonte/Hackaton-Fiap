@@ -5,6 +5,7 @@ import path from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
 import questionsRoutes from './routes/questions.js'
+import authRoutes from './routes/auth.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -13,6 +14,14 @@ const __dirname = path.dirname(__filename)
 const tmpDir = path.join(__dirname, '../tmp')
 try {
   fs.mkdirSync(tmpDir, { recursive: true })
+} catch (err) {
+  if (err.code !== 'EEXIST') throw err
+}
+
+// ✅ garante Backend/data no boot (para users.json)
+const dataDir = path.join(__dirname, '../data')
+try {
+  fs.mkdirSync(dataDir, { recursive: true })
 } catch (err) {
   if (err.code !== 'EEXIST') throw err
 }
@@ -38,7 +47,10 @@ fastify.get('/files/:name', async (request, reply) => {
   return reply.send(fs.createReadStream(filePath))
 })
 
-// API
+// ✅ API de autenticação
+fastify.register(authRoutes, { prefix: '/auth' })
+
+// ✅ API de questões (protegida por autenticação)
 fastify.register(questionsRoutes, { prefix: '/questions' })
 
 fastify.listen({ port: 3333, host: '0.0.0.0' })
