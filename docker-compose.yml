@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  # MongoDB
+  mongodb:
+    image: mongo:7.0
+    container_name: hackathon-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: hackathon2025
+      MONGO_INITDB_DATABASE: hackathon
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-init:/docker-entrypoint-initdb.d
+    networks:
+      - hackathon-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  # Backend Node.js
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: hackathon-backend
+    restart: unless-stopped
+    ports:
+      - "3333:3333"
+    environment:
+      NODE_ENV: development
+      MONGODB_URI: mongodb://admin:hackathon2025@mongodb:27017/hackathon?authSource=admin
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      JWT_SECRET: ${JWT_SECRET:-seu-secret-jwt-super-seguro-mude-isso}
+      PORT: 3333
+    volumes:
+      # Hot reload - código fonte
+      - ./Backend/src:/app/src
+      - ./Frontend:/app/Frontend
+      # Preserva node_modules do container
+      - /app/node_modules
+      # PDFs e dados persistentes
+      - ./Backend/tmp:/app/tmp
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - hackathon-network
+    command: npm run dev
+
+  # Mongo Express (Interface Web para MongoDB) - OPCIONAL
+  mongo-express:
+    image: mongo-express:1.0.2
+    container_name: hackathon-mongo-express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: hackathon2025
+      ME_CONFIG_MONGODB_URL: mongodb://admin:hackathon2025@mongodb:27017/
+      ME_CONFIG_BASICAUTH: false
+    depends_on:
+      - mongodb
+    networks:
+      - hackathon-network
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  hackathon-network:
+    driver: bridge

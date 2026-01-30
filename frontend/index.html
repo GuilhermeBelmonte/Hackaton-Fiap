@@ -59,12 +59,29 @@
       transform: translateY(-1px);
       box-shadow: 0 10px 20px rgba(37,99,235,.35);
     }
+    .btn-secondary {
+      background: linear-gradient(135deg, #059669, #047857);
+      color: #fff;
+      margin-top: 8px;
+    }
+    .btn-secondary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 20px rgba(5,150,105,.35);
+    }
     .btn-ghost {
       background: transparent;
       color: #93c5fd;
       border: 1px solid #1e40af;
       width: auto;
       padding: 10px 12px;
+    }
+    .btn-link {
+      background: transparent;
+      color: #60a5fa;
+      text-decoration: underline;
+      padding: 8px;
+      font-weight: 400;
+      font-size: 0.9rem;
     }
     .topbar {
       display: flex;
@@ -101,7 +118,20 @@
     }
     .pdf-links a:hover { transform: translateY(-1px); background: #0f1b3a; }
     .error { color: #fecaca; background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.35); padding: 10px 12px; border-radius: 10px; }
+    .success { color: #86efac; background: rgba(34,197,94,.12); border: 1px solid rgba(34,197,94,.35); padding: 10px 12px; border-radius: 10px; }
     .hidden { display: none; }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .user-badge {
+      background: #1e293b;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: #cbd5e1;
+    }
   </style>
 </head>
 <body>
@@ -109,31 +139,71 @@
     <div class="topbar">
       <div>
         <h1>🧠 Gerador de Avaliações</h1>
-        <div class="muted">MVP Hackathon • login obrigatório</div>
+        <div class="muted">MVP Hackathon • Sistema com autenticação</div>
       </div>
-      <button id="logoutBtn" class="btn btn-ghost hidden" onclick="logout()">Sair</button>
+      <div id="userInfo" class="user-info hidden">
+        <span id="userBadge" class="user-badge"></span>
+        <button id="logoutBtn" class="btn btn-ghost" onclick="logout()">Sair</button>
+      </div>
     </div>
 
     <!-- LOGIN -->
     <div id="loginView" class="card">
       <h2>Entrar</h2>
-      <div class="muted">Use seu email e senha para acessar.</div>
+      <div class="muted">Use seu email e senha para acessar o sistema.</div>
       <div style="height:12px"></div>
 
       <div class="row">
         <div class="col">
-          <input id="email" placeholder="Email" />
+          <input id="loginEmail" placeholder="Email" type="email" />
         </div>
         <div class="col">
-          <input id="password" type="password" placeholder="Senha" />
+          <input id="loginPassword" type="password" placeholder="Senha" />
         </div>
       </div>
 
       <div style="height:12px"></div>
-      <button class="btn btn-primary" onclick="login()">Login</button>
+      <button class="btn btn-primary" onclick="login()">Entrar</button>
+      
+      <div style="height:8px"></div>
+      <button class="btn btn-link" onclick="showRegister()">Não tem conta? Criar nova conta</button>
 
       <div style="height:12px"></div>
       <div id="loginError" class="error hidden"></div>
+    </div>
+
+    <!-- REGISTRO -->
+    <div id="registerView" class="card hidden">
+      <h2>Criar Nova Conta</h2>
+      <div class="muted">Preencha os dados para criar sua conta.</div>
+      <div style="height:12px"></div>
+
+      <div class="row">
+        <div class="col">
+          <input id="registerName" placeholder="Nome (opcional)" />
+        </div>
+      </div>
+
+      <div style="height:8px"></div>
+
+      <div class="row">
+        <div class="col">
+          <input id="registerEmail" placeholder="Email" type="email" />
+        </div>
+        <div class="col">
+          <input id="registerPassword" type="password" placeholder="Senha (mín. 6 caracteres)" />
+        </div>
+      </div>
+
+      <div style="height:12px"></div>
+      <button class="btn btn-secondary" onclick="register()">Criar Conta</button>
+      
+      <div style="height:8px"></div>
+      <button class="btn btn-link" onclick="showLogin()">Já tem conta? Fazer login</button>
+
+      <div style="height:12px"></div>
+      <div id="registerError" class="error hidden"></div>
+      <div id="registerSuccess" class="success hidden"></div>
     </div>
 
     <!-- APP -->
@@ -154,7 +224,7 @@
           </select>
         </div>
         <div class="col">
-          <input id="amount" type="number" min="1" max="20" value="5" />
+          <input id="amount" type="number" min="1" max="20" value="5" placeholder="Nº de questões" />
         </div>
       </div>
 
@@ -167,6 +237,7 @@
 
   <script>
     const TOKEN_KEY = 'hackathon_token'
+    const USER_KEY = 'hackathon_user'
 
     function getToken() {
       return localStorage.getItem(TOKEN_KEY)
@@ -178,18 +249,53 @@
 
     function clearToken() {
       localStorage.removeItem(TOKEN_KEY)
+      localStorage.removeItem(USER_KEY)
+    }
+
+    function setUser(user) {
+      localStorage.setItem(USER_KEY, JSON.stringify(user))
+    }
+
+    function getUser() {
+      const userData = localStorage.getItem(USER_KEY)
+      return userData ? JSON.parse(userData) : null
     }
 
     function showLogin() {
       document.getElementById('loginView').classList.remove('hidden')
+      document.getElementById('registerView').classList.add('hidden')
       document.getElementById('appView').classList.add('hidden')
-      document.getElementById('logoutBtn').classList.add('hidden')
+      document.getElementById('userInfo').classList.add('hidden')
+      
+      // Limpa erros
+      document.getElementById('loginError').classList.add('hidden')
+      document.getElementById('loginError').textContent = ''
+    }
+
+    function showRegister() {
+      document.getElementById('loginView').classList.add('hidden')
+      document.getElementById('registerView').classList.remove('hidden')
+      document.getElementById('appView').classList.add('hidden')
+      document.getElementById('userInfo').classList.add('hidden')
+      
+      // Limpa mensagens
+      document.getElementById('registerError').classList.add('hidden')
+      document.getElementById('registerSuccess').classList.add('hidden')
+      document.getElementById('registerError').textContent = ''
+      document.getElementById('registerSuccess').textContent = ''
     }
 
     function showApp() {
       document.getElementById('loginView').classList.add('hidden')
+      document.getElementById('registerView').classList.add('hidden')
       document.getElementById('appView').classList.remove('hidden')
-      document.getElementById('logoutBtn').classList.remove('hidden')
+      document.getElementById('userInfo').classList.remove('hidden')
+      
+      // Mostra nome do usuário
+      const user = getUser()
+      if (user) {
+        document.getElementById('userBadge').textContent = user.name || user.email
+      }
     }
 
     function logout() {
@@ -205,12 +311,18 @@
     })()
 
     async function login() {
-      const email = document.getElementById('email').value.trim()
-      const password = document.getElementById('password').value.trim()
+      const email = document.getElementById('loginEmail').value.trim()
+      const password = document.getElementById('loginPassword').value.trim()
       const errBox = document.getElementById('loginError')
 
       errBox.classList.add('hidden')
       errBox.textContent = ''
+
+      if (!email || !password) {
+        errBox.textContent = 'Preencha email e senha'
+        errBox.classList.remove('hidden')
+        return
+      }
 
       try {
         const res = await fetch('/auth/login', {
@@ -219,15 +331,14 @@
           body: JSON.stringify({ email, password })
         })
 
-        const text = await res.text()
+        const data = await res.json()
 
         if (!res.ok) {
-          errBox.textContent = `Erro ${res.status}: ${text}`
+          errBox.textContent = data.error || `Erro ${res.status}`
           errBox.classList.remove('hidden')
           return
         }
 
-        const data = JSON.parse(text)
         if (!data.token) {
           errBox.textContent = 'Login não retornou token.'
           errBox.classList.remove('hidden')
@@ -235,11 +346,73 @@
         }
 
         setToken(data.token)
+        setUser(data.user)
         showApp()
 
       } catch (e) {
         console.error(e)
         errBox.textContent = 'Falha no login. Veja o console.'
+        errBox.classList.remove('hidden')
+      }
+    }
+
+    async function register() {
+      const name = document.getElementById('registerName').value.trim()
+      const email = document.getElementById('registerEmail').value.trim()
+      const password = document.getElementById('registerPassword').value.trim()
+      const errBox = document.getElementById('registerError')
+      const successBox = document.getElementById('registerSuccess')
+
+      errBox.classList.add('hidden')
+      successBox.classList.add('hidden')
+      errBox.textContent = ''
+      successBox.textContent = ''
+
+      if (!email || !password) {
+        errBox.textContent = 'Preencha email e senha'
+        errBox.classList.remove('hidden')
+        return
+      }
+
+      if (password.length < 6) {
+        errBox.textContent = 'Senha deve ter no mínimo 6 caracteres'
+        errBox.classList.remove('hidden')
+        return
+      }
+
+      try {
+        const res = await fetch('/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, name })
+        })
+
+        const data = await res.json()
+
+        if (!res.ok) {
+          errBox.textContent = data.error || `Erro ${res.status}`
+          errBox.classList.remove('hidden')
+          return
+        }
+
+        if (!data.token) {
+          errBox.textContent = 'Registro não retornou token.'
+          errBox.classList.remove('hidden')
+          return
+        }
+
+        // Sucesso! Faz login automaticamente
+        setToken(data.token)
+        setUser(data.user)
+        
+        successBox.textContent = '✓ Conta criada com sucesso! Redirecionando...'
+        successBox.classList.remove('hidden')
+        
+        setTimeout(() => showApp(), 1500)
+
+      } catch (e) {
+        console.error(e)
+        errBox.textContent = 'Falha no registro. Veja o console.'
         errBox.classList.remove('hidden')
       }
     }
@@ -264,6 +437,11 @@
         const level = document.getElementById('level').value
         const amount = Number(document.getElementById('amount').value)
 
+        if (!topic) {
+          result.textContent = 'Por favor, preencha o tema da avaliação'
+          return
+        }
+
         const res = await fetch('/questions/generate', {
           method: 'POST',
           headers: {
@@ -273,20 +451,19 @@
           body: JSON.stringify({ topic, level, amount })
         })
 
-        const text = await res.text()
-
         if (res.status === 401) {
           clearToken()
           showLogin()
           return
         }
 
+        const data = await res.json()
+
         if (!res.ok) {
-          result.textContent = `Erro ${res.status}: ${text}`
+          result.textContent = data.error || `Erro ${res.status}`
           return
         }
 
-        const data = JSON.parse(text)
         renderAssessment(data.assessment ?? data, data.pdfs)
 
       } catch (e) {
@@ -345,6 +522,15 @@
         result.appendChild(links)
       }
     }
+
+    // Permite login com Enter
+    document.getElementById('loginPassword')?.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') login()
+    })
+
+    document.getElementById('registerPassword')?.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') register()
+    })
   </script>
 </body>
 </html>
