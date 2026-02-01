@@ -1,3 +1,4 @@
+import mongoose from 'mongoose'
 import Assessment from '../models/Assessment.model.js'
 
 // Cria nova avaliação
@@ -46,7 +47,7 @@ export async function listUserAssessments(userId, { topic, level, limit = 50, sk
       .sort({ createdAt: -1 })
       .limit(limit)
       .skip(skip)
-      .select('-questions.expectedAnswer -questions.gradingCriteria') // Remove gabaritos da listagem
+      .select('-questions.expectedAnswer -questions.gradingCriteria')
 
     const total = await Assessment.countDocuments(filter)
 
@@ -68,7 +69,7 @@ export async function getAssessmentById(assessmentId, userId) {
   try {
     const assessment = await Assessment.findOne({
       _id: assessmentId,
-      userId // Garante que só o dono pode ver
+      userId
     })
 
     return assessment
@@ -83,7 +84,7 @@ export async function deleteAssessment(assessmentId, userId) {
   try {
     const result = await Assessment.deleteOne({
       _id: assessmentId,
-      userId // Garante que só o dono pode deletar
+      userId
     })
 
     return result.deletedCount > 0
@@ -93,11 +94,17 @@ export async function deleteAssessment(assessmentId, userId) {
   }
 }
 
+// ✅ FIX: converte userId para ObjectId antes de usar no aggregate
+function toObjectId(id) {
+  if (id instanceof mongoose.Types.ObjectId) return id
+  return new mongoose.Types.ObjectId(id)
+}
+
 // Estatísticas do usuário
 export async function getUserStats(userId) {
   try {
     const stats = await Assessment.aggregate([
-      { $match: { userId: userId } },
+      { $match: { userId: toObjectId(userId) } },
       {
         $group: {
           _id: null,
@@ -161,7 +168,7 @@ export async function getUserStats(userId) {
 export async function getTopTopics(userId, limit = 10) {
   try {
     const topics = await Assessment.aggregate([
-      { $match: { userId: userId } },
+      { $match: { userId: toObjectId(userId) } },
       { $group: { _id: '$topic', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
       { $limit: limit },

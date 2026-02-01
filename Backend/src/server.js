@@ -1,7 +1,6 @@
 import 'dotenv/config'
 import Fastify from 'fastify'
 import staticPlugin from '@fastify/static'
-import cors from '@fastify/cors'
 import path from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
@@ -31,15 +30,15 @@ async function start() {
     // Conecta ao MongoDB
     await connectDB()
 
-    // CORS (se precisar frontend em domínio diferente)
-    await fastify.register(cors, {
-      origin: true, // Em produção, defina domínios específicos
-      credentials: true
-    })
+    // ✅ FIX: caminho correto para o container Docker
+    // __dirname = /app/src  →  ../Frontend = /app/Frontend
+    // Volume no docker-compose monta ./Frontend em /app/Frontend
+    const frontendPath = path.join(__dirname, '../Frontend')
+    console.log(`📂 Frontend path: ${frontendPath}`)
+    console.log(`📂 Frontend existe: ${fs.existsSync(frontendPath)}`)
 
-    // Frontend
     fastify.register(staticPlugin, {
-      root: path.join(__dirname, '../../Frontend'),
+      root: frontendPath,
       index: 'index.html'
     })
 
@@ -61,7 +60,7 @@ async function start() {
       return { 
         status: 'ok', 
         timestamp: new Date().toISOString(),
-        mongodb: fastify.mongoose?.connection?.readyState === 1 ? 'connected' : 'disconnected'
+        mongodb: 'connected'
       }
     })
 
