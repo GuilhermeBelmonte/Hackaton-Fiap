@@ -129,10 +129,6 @@ Após iniciar o servidor, acesse:
 
 Swagger UI: http://localhost:3333/docs
 
-Health Check: http://localhost:3333/health
-
-API Status: http://localhost:3333/
-
 Fluxo de autenticação
 
 ### 1. Registrar um professor
