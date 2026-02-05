@@ -1,4 +1,6 @@
 import ProvaService from "../services/provaService.js";
+import PDFService from "../services/pdfService.js";
+import AuthService from "../services/authService.js";
 
 export class ProvaController {
   async list(request, reply) {
@@ -108,6 +110,105 @@ export class ProvaController {
       }
       console.log("❌ Erro ao deletar prova:", error);
       return reply.status(500).send({ error: "Erro ao deletar prova" });
+    }
+  }
+
+  async downloadPDFAluno(request, reply) {
+    try {
+      console.log("📄 Gerando PDF para aluno...");
+
+      const { id } = request.params;
+
+      // Busca prova
+      const prova = await ProvaService.getProvaById(id);
+      if (!prova) {
+        return reply.status(404).send({
+          error: "Prova não encontrada",
+          message: `Prova com ID ${id} não existe`,
+        });
+      }
+
+      console.log(`✅ Prova encontrada: ${prova.disciplina}`);
+
+      // Gera PDF
+      const pdfBuffer = await PDFService.generateStudentPDF(prova);
+
+      console.log(`✅ PDF gerado (${pdfBuffer.length} bytes)`);
+
+      // Configura headers para download
+      reply.header("Content-Type", "application/pdf");
+      reply.header(
+        "Content-Disposition",
+        `inline; filename="prova-${prova.disciplina.toLowerCase()}-aluno.pdf"`,
+      );
+
+      reply.header("Content-Length", pdfBuffer.length);
+      reply.header("Cache-Control", "no-cache");
+
+      return reply.send(pdfBuffer);
+    } catch (error) {
+      console.error("❌ Erro ao gerar PDF aluno:", error);
+      return reply.status(500).send({
+        error: "Erro ao gerar PDF para aluno",
+        details: error.message,
+      });
+    }
+  }
+
+  /**
+   * Baixar PDF para professor (PROTEGIDO)
+   */
+  async downloadPDFProfessor(request, reply) {
+    try {
+      console.log("📄 Gerando PDF para professor...");
+
+      const { id } = request.params;
+
+      // Busca prova
+      const prova = await ProvaService.getProvaById(id);
+      if (!prova) {
+        return reply.status(404).send({
+          error: "Prova não encontrada",
+          message: `Prova com ID ${id} não existe`,
+        });
+      }
+
+      // Busca dados do professor (opcional, para mostrar no cabeçalho)
+      let professor = null;
+      try {
+        professor = await AuthService.getPerfil(request.user.id);
+      } catch (error) {
+        console.log(
+          "⚠️  Não foi possível obter dados do professor:",
+          error.message,
+        );
+        // Continua mesmo sem dados do professor
+      }
+
+      console.log(`✅ Prova encontrada: ${prova.disciplina}`);
+      console.log(`👤 Professor: ${professor?.nome || "Não identificado"}`);
+
+      // Gera PDF com respostas
+      const pdfBuffer = await PDFService.generateProfessorPDF(prova, professor);
+
+      console.log(`✅ PDF gerado (${pdfBuffer.length} bytes)`);
+
+      // Configura headers para download
+      reply.header("Content-Type", "application/pdf");
+      reply.header(
+        "Content-Disposition",
+        `attachment; filename="prova-${prova.disciplina.toLowerCase()}-professor.pdf"`,
+      );
+      reply.header("Content-Length", pdfBuffer.length);
+      reply.header("Cache-Control", "no-cache");
+
+      return reply.send(pdfBuffer);
+    } catch (error) {
+      console.error("❌ Erro ao gerar PDF professor:", error);
+      return reply.status(500).send({
+        error: "Erro ao gerar PDF para professor",
+        details: error.message,
+      });
     }
   }
 }

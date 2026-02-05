@@ -247,4 +247,76 @@ export default async function (fastify, opts) {
     },
     ProvaController.remove,
   );
+
+  // GET /provas/:id/pdf/aluno - PDF para aluno (PÚBLICO)
+  fastify.get(
+    "/:id/pdf/aluno",
+    {
+      preHandler: validateObjectId,
+      schema: {
+        tags: ["Provas", "PDF"],
+        description:
+          "Baixar PDF da prova para alunos (sem respostas) - ACESSO PÚBLICO",
+        params: {
+          type: "object",
+          required: ["id"],
+          properties: {
+            id: { type: "string" },
+          },
+        },
+        produces: ["application/pdf"],
+        response: {
+          200: {
+            description: "PDF gerado com sucesso",
+          },
+          404: {
+            type: "object",
+            properties: {
+              error: { type: "string" },
+              message: { type: "string" },
+            },
+          },
+        },
+      },
+    },
+    ProvaController.downloadPDFAluno,
+  );
+
+  // GET /provas/:id/pdf/professor - PDF para professor (PROTEGIDO)
+  fastify.get(
+    "/:id/pdf/professor",
+    {
+      preHandler: [validateObjectId, authenticate],
+      schema: {
+        tags: ["Provas", "PDF"],
+        description:
+          "Baixar PDF da prova para professores (com respostas) - APENAS PROFESSORES AUTENTICADOS",
+        security: [{ Bearer: [] }],
+        params: {
+          type: "object",
+          required: ["id"],
+          properties: {
+            id: { type: "string" },
+          },
+        },
+        produces: ["application/pdf"],
+        response: {
+          200: {
+            description: "PDF gerado com sucesso",
+          },
+          401: {
+            description: "Não autorizado - precisa ser professor",
+          },
+          404: {
+            type: "object",
+            properties: {
+              error: { type: "string" },
+              message: { type: "string" },
+            },
+          },
+        },
+      },
+    },
+    ProvaController.downloadPDFProfessor,
+  );
 }
