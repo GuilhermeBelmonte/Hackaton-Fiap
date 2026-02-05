@@ -63,7 +63,6 @@ Sistema completo para geração automática e manual de provas escolares utiliza
 ┗ 📜README.md # Este arquivo
 ```
 
-
 ## ⚙️ Pré-requisitos
 
 - **Node.js** (versão 18 ou superior)
@@ -81,18 +80,23 @@ cd Backend
 ```
 
 ### 2. Instale as dependências
+
 ```
 npm install
 ```
+
 ### 3. Configure as variáveis de ambiente
+
 Crie um arquivo .env baseado no .env.example:
 
 ```
 cp .env.example .env
 ```
+
 Edite o .env com suas configurações:
 
 ### env
+
 ```
 # Servidor
 PORT=
@@ -107,7 +111,9 @@ OPENAI_API_KEY=
 JWT_SECRET=
 JWT_EXPIRES_IN=
 ```
+
 ### 4. Inicie o MongoDB com Docker
+
 ```
 docker-compose up -d
 ```
@@ -118,12 +124,15 @@ Verifique se o container está rodando:
 docker ps
 # Deve mostrar: prova-agil-db
 ```
+
 ### 5. Inicie o servidor
+
 ```
 npm run dev
 ```
 
 ## 🚀 Uso da API
+
 Acessando a documentação interativa
 Após iniciar o servidor, acesse:
 
@@ -132,6 +141,7 @@ Swagger UI: http://localhost:3333/docs
 Fluxo de autenticação
 
 ### 1. Registrar um professor
+
 ```
 http
 POST /auth/register
@@ -144,7 +154,9 @@ json
   "disciplinaPrincipal": "Matemática"
 }
 ```
+
 ### 2. Fazer login
+
 ```
 http
 POST /auth/login
@@ -165,7 +177,9 @@ json
   }
 }
 ```
+
 ### 3. Configurar autenticação no Swagger
+
 Clique no botão "Authorize" (cadeado)
 
 Cole: Bearer seu_token_aqui
@@ -173,6 +187,7 @@ Cole: Bearer seu_token_aqui
 Clique em "Authorize"
 
 📋 Endpoints da API
+
 ```
 🔐 Autenticação (Público)
 Método	Endpoint	       Descrição
@@ -194,9 +209,18 @@ POST    /provas          Criar prova manualmente
 POST    /provas/gerar    Gerar prova com IA
 PUT     /provas/:id      Atualizar prova
 DELETE  /provas/:id      Deletar prova
+
+Gerar PDF:
+Método  Endpoint                       Descrição
+GET	    /provas/:id/pdf/aluno          Listar todas as provas
+GET	    /provas/:id/pdf/professor      Buscar prova específica (autenticação requerida)
+
 ```
+
 ## 🎯 Como Gerar Provas
+
 ### 1. Criar prova manualmente
+
 ```
 json
 POST /provas
@@ -220,7 +244,9 @@ POST /provas
   ]
 }
 ```
+
 ### 2. Gerar prova com IA
+
 ```
 json
 POST /provas/gerar
@@ -232,7 +258,9 @@ POST /provas/gerar
   "quantidadeQuestoes": 8
 }
 ```
+
 ### 3. Gerar prova com distribuição específica
+
 ```
 json
 POST /provas/gerar
@@ -247,7 +275,9 @@ POST /provas/gerar
   "qtdVerdadeiroFalso": 1
 }
 ```
+
 4. Gerar apenas múltipla escolha
+
 ```
 json
 POST /provas/gerar
@@ -260,20 +290,27 @@ POST /provas/gerar
   "tipos": ["multipla_escolha"]
 }
 ```
+
 ## 🔧 Configurações Avançadas
+
 Tipos de Questões Suportados
+
 ```
 multipla_escolha - Questões com 4 alternativas (A, B, C, D)
 dissertativa - Questões que exigem explicação escrita
 verdadeiro_falso - Afirmações para julgar verdadeiro/falso
 ```
+
 Níveis de Dificuldade
+
 ```
 facil - Questões básicas
 medio - Questões intermediárias
 dificil - Questões avançadas
 ```
+
 ## 🧪 Testando no Swagger
+
 Passo a Passo:
 
 Acesse http://localhost:3333/docs
@@ -307,8 +344,10 @@ Testes Recomendados:
 ✅ Deletar prova
 
 ## 🐛 Solução de Problemas
+
 Erro comum: MongoDB não conecta
 bash
+
 ```
 # Verificar se o Docker está rodando
 docker ps
@@ -320,7 +359,9 @@ docker-compose up -d
 # Ver logs do MongoDB
 docker logs prova-agil-db
 ```
+
 Erro comum: OpenAI API Key inválida
+
 ```
 Verifique se a chave está correta no .env
 
@@ -328,7 +369,9 @@ Confirme se tem créditos na conta OpenAI
 
 Tente usar gpt-3.5-turbo se gpt-4.1-mini falhar
 ```
+
 Erro comum: Token JWT inválido
+
 ```
 Certifique-se de incluir Bearer antes do token
 
@@ -336,7 +379,9 @@ Tokens expiram em 7 dias (configurável)
 
 Faça login novamente para obter novo token
 ```
+
 ## 📊 Estrutura de Dados
+
 ```
 Prova
 javascript
@@ -375,6 +420,7 @@ javascript
   "updatedAt": "Date"
 }
 ```
+
 ## 📈 Próximas Melhorias
 
 Exportação para PDF - Gerar provas em formato impresso
@@ -390,4 +436,7 @@ Frontend React - Interface web amigável
 Sistema de turmas - Organizar por turmas de alunos
 
 Compartilhamento de provas - Compartilhar entre professores
+
+```
+
 ```
