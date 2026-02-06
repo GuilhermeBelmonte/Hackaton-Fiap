@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-gray-100 min-h-screen;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-blue-500/50 hover:-translate-y-0.5;
+  }
+
+  .btn-secondary {
+    @apply bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg hover:shadow-green-500/50 hover:-translate-y-0.5;
+  }
+
+  .btn-danger {
+    @apply bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-lg hover:shadow-red-500/50 hover:-translate-y-0.5;
+  }
+
+  .btn-ghost {
+    @apply bg-transparent border border-blue-800 text-blue-300 hover:bg-blue-950/50;
+  }
+
+  .input {
+    @apply w-full px-4 py-3 rounded-lg border border-slate-700 bg-slate-900/50 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all;
+  }
+
+  .card {
+    @apply bg-slate-900/50 border border-slate-800 rounded-xl p-6 shadow-xl backdrop-blur-sm;
+  }
+
+  .alert-error {
+    @apply bg-red-900/20 border border-red-800/50 text-red-200 px-4 py-3 rounded-lg;
+  }
+
+  .alert-success {
+    @apply bg-green-900/20 border border-green-800/50 text-green-200 px-4 py-3 rounded-lg;
+  }
+
+  .alert-info {
+    @apply bg-blue-900/20 border border-blue-800/50 text-blue-200 px-4 py-3 rounded-lg;
+  }
+
+  @keyframes slide-in-right {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  .animate-slide-in-right {
+    animation: slide-in-right 0.3s ease-out;
+  }
+}
